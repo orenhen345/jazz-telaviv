@@ -302,6 +302,42 @@
       (window.matchMedia && window.matchMedia('(hover: none)').matches)
     ));
 
+    // Mobile-only: swap artist card order (Eidan Rosen <-> Daniel Friedman)
+    // so they appear exchanged in the single-column artists grid.
+    (function swapArtistsOnMobile() {
+      if (typeof window === 'undefined' || !window.matchMedia) return;
+      if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+      var grid = document.querySelector('.artists-grid');
+      if (!grid) return;
+
+      var cards = Array.prototype.slice.call(grid.querySelectorAll('.artist-card'));
+      var getTitle = function(card) {
+        var h3 = card && card.querySelector('h3');
+        return h3 ? (h3.textContent || '').trim() : '';
+      };
+
+      var eidan = cards.find(function(c) {
+        var t = getTitle(c);
+        return t === 'עידן רוזן' || t === 'עידו רוזן';
+      });
+      var daniel = cards.find(function(c) {
+        return getTitle(c) === 'דניאל פרידמן';
+      });
+
+      if (!eidan || !daniel || eidan === daniel) return;
+
+      // Swap nodes using a placeholder (no cloning, so event bindings remain correct).
+      var placeholder = document.createElement('div');
+      placeholder.setAttribute('aria-hidden', 'true');
+      placeholder.style.display = 'none';
+
+      grid.insertBefore(placeholder, eidan);
+      grid.insertBefore(eidan, daniel);
+      grid.insertBefore(daniel, placeholder);
+      placeholder.remove();
+    })();
+
     document.querySelectorAll('.artist-has-video').forEach(function(card) {
       var popup = card.querySelector('.artist-card-hover');
       var vid = popup ? popup.querySelector('video') : null;
